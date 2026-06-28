@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Rog·AI — Agent Personnel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--card:#12121a;--card2:#1a1a26;--border:#2a2a40;
+  --accent:#6c63ff;--accent2:#a78bfa;--text:#e8e8f0;--muted:#6b6b8a;
+  --green:#22c55e;--amber:#f59e0b;--red:#ef4444
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:14px;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;max-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.topbar-info{flex:1}
+.topbar-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.topbar-sub{font-size:11px;color:var(--muted)}
+.status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green)}
+.status-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* CONNECTORS */
+.connectors{display:flex;gap:5px;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.connectors::-webkit-scrollbar{display:none}
+.chip{display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;border:1px solid var(--border);color:var(--muted)}
+.chip.on{background:#0d1f0d;border-color:var(--green);color:var(--green)}
+.chip .dot{width:5px;height:5px;background:var(--green);border-radius:50%}
+
+/* SHORTCUTS */
+.shortcuts{padding:8px 14px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);scrollbar-width:none}
+.shortcuts::-webkit-scrollbar{display:none}
+.shortcut{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--accent2);cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.shortcut:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* MESSAGES */
+.messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.msg{display:flex;gap:8px;max-width:100%;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{flex-direction:row-reverse}
+.avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.avatar.ai{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.avatar.user{background:var(--card2);color:var(--accent2);border:1px solid var(--border)}
+.bubble{max-width:calc(100% - 44px);padding:10px 13px;border-radius:14px;line-height:1.55;font-size:13px;word-break:break-word}
+.bubble.ai{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:4px 14px 14px 14px}
+.bubble.user{background:var(--accent);color:#fff;border-radius:14px 4px 14px 14px}
+.tool-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.25);border-radius:4px;padding:2px 6px;font-size:10px;color:var(--accent2);margin-bottom:6px;margin-right:4px}
+
+/* TYPING */
+.typing-wrap{display:flex;gap:8px}
+.typing{display:flex;align-items:center;gap:5px;padding:12px 14px;background:var(--card2);border:1px solid var(--border);border-radius:4px 14px 14px 14px}
+.typing span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce .8s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+/* INPUT */
+.inputbar{padding:10px 14px;padding-bottom:max(10px, env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+.input-wrap{display:flex;gap:7px;align-items:flex-end}
+.input-area{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:9px 13px;color:var(--text);font-size:14px;resize:none;font-family:inherit;min-height:40px;max-height:110px;line-height:1.4;outline:none;-webkit-appearance:none;transition:border-color .2s}
+.input-area:focus{border-color:var(--accent)}
+.input-area::placeholder{color:var(--muted)}
+.btn{width:40px;height:40px;border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;font-size:17px;transition:transform .1s}
+.btn:active{transform:scale(.93)}
+.send-btn{background:var(--accent)}
+.send-btn svg{width:17px;height:17px;fill:#fff}
+.mic-btn{background:var(--card2);border:1px solid var(--border)}
+.mic-btn.recording{background:rgba(239,68,68,.15);border-color:var(--red);animation:pulse 1s infinite}
+
+/* SETTINGS MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:70vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border:none}
+.setting-label{font-size:13px;font-weight:500}
+.setting-sub{font-size:11px;color:var(--muted)}
+.api-input{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;font-family:monospace;width:100%;outline:none;margin-top:8px}
+.save-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;border-radius:12px}
+.close-modal{float:right;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;margin-top:-4px}
+
+/* SCROLLBAR */
+.messages::-webkit-scrollbar{width:3px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="logo">✦</div>
+    <div class="topbar-info">
+      <div class="topbar-title">Rog·AI Agent</div>
+      <div class="topbar-sub">RogWeb Service · Abidjan</div>
+    </div>
+    <div class="status"><div class="status-dot"></div><span id="statusTxt">En ligne</span></div>
+    <button onclick="openSettings()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;margin-left:6px">⚙️</button>
+  </div>
+
+  <div class="connectors">
+    <div class="chip on"><div class="dot"></div>Gmail</div>
+    <div class="chip on"><div class="dot"></div>Calendar</div>
+    <div class="chip on"><div class="dot"></div>Drive</div>
+    <div class="chip on"><div class="dot"></div>Web Search</div>
+    <div class="chip on"><div class="dot"></div>Claude AI</div>
+  </div>
+
+  <div class="shortcuts">
+    <div class="shortcut" onclick="quickSend('Lis mes derniers emails non lus et résume-les')">📬 Emails</div>
+    <div class="shortcut" onclick="quickSend('Quels sont mes événements du jour dans mon agenda ?')">📅 Agenda</div>
+    <div class="shortcut" onclick="quickSend('Montre-moi mes fichiers récents dans Drive')">📁 Drive</div>
+    <div class="shortcut" onclick="quickSend('Rédige un email professionnel pour proposer mes services de développement web à un nouveau client')">✍️ Rédiger</div>
+    <div class="shortcut" onclick="quickSend('Quelles sont les actualités tech et business en Côte d\'Ivoire aujourd\'hui ?')">🌍 Actus</div>
+    <div class="shortcut" onclick="quickSend('Aide-moi à gérer mes projets RogWeb Service en cours')">💼 Projets</div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="msg">
+      <div class="avatar ai">✦</div>
+      <div class="bubble ai">
+        Bonjour Roger 👋<br><br>
+        Je suis ton agent IA personnel connecté à <strong>Gmail, Calendar, Drive</strong> et la <strong>recherche web</strong>.<br><br>
+        Je peux :<br>
+        📬 Lire et résumer tes emails<br>
+        📅 Gérer ton agenda<br>
+        📁 Retrouver tes fichiers Drive<br>
+        ✍️ Rédiger des emails à ta place<br>
+        🌐 Chercher des infos en temps réel<br>
+        💼 T'aider à gérer RogWeb Service<br><br>
+        <strong>Dis-moi ce que tu veux faire !</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="inputbar">
+    <div class="input-wrap">
+      <button class="btn mic-btn" id="micBtn" onclick="toggleMic()">🎙️</button>
+      <textarea class="input-area" id="userInput"
+        placeholder="Pose ta question..."
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"></textarea>
+      <button class="btn send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="close-modal" onclick="closeSettings()">✕</button>
+    <h3>⚙️ Configuration</h3>
+    <p>Clé API Claude (Anthropic)</p>
+
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start">
+      <div>
+        <div class="setting-label">Clé API Anthropic</div>
+        <div class="setting-sub">Obtenir sur console.anthropic.com</div>
+      </div>
+      <input type="password" class="api-input" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Modèle IA</div>
+        <div class="setting-sub">claude-sonnet-4-6 (recommandé)</div>
+      </div>
+      <span style="font-size:11px;color:var(--accent2)">Sonnet 4.6</span>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Voix française</div>
+        <div class="setting-sub">Reconnaissance vocale fr-FR</div>
+      </div>
+      <span style="font-size:11px;color:var(--green)">✓ Activé</span>
+    </div>
+
+    <button class="save-btn" onclick="saveSettings()">Enregistrer</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const MODEL = 'claude-sonnet-4-6';
+const SYSTEM = `Tu es l'agent IA personnel de Roger Kouamé, entrepreneur et développeur web basé à Abidjan, Côte d'Ivoire, fondateur de RogWeb Service (email: serykouame@gmail.com, WhatsApp: +225 0170292408).
+
+Tu as accès à ses outils connectés : Gmail, Google Calendar, Google Drive, et la recherche web en temps réel.
+
+Tes missions principales :
+- GMAIL : Lire, résumer, trier ses emails. Rédiger des réponses ou nouveaux emails professionnels.
+- CALENDAR : Lister les événements du jour/semaine, créer ou rappeler des rendez-vous.
+- DRIVE : Retrouver, lister, résumer des fichiers et documents.
+- WEB : Rechercher des actualités, prix, infos techniques, actualités Côte d'Ivoire.
+- ROGWEB : L'aider à gérer ses projets clients (apps web, restaurants, marketplaces, transport).
+
+Règles :
+- Parle toujours en français, sois concis et professionnel.
+- Quand tu utilises un outil, indique-le : [Gmail] [Calendar] [Drive] [Web].
+- Pour les emails : affiche Expéditeur → Sujet → Aperçu → Date.
+- Pour les événements : Heure → Titre → Lieu.
+- Pour les fichiers : Nom → Type → Date modifiée.
+- Si tu rédiges un email, présente-le dans un bloc clair prêt à copier.
+- Connais le contexte de Roger : il vend des apps web HTML single-file sur GitHub Pages (tikof1980.github.io), utilise Claude API pour des fonctionnalités IA, intègre WhatsApp ordering. Ses clients sont des restaurants, boutiques, transport en Côte d'Ivoire.`;
+
+const MCP_SERVERS = [
+  {type:'url', url:'https://gmailmcp.googleapis.com/mcp/v1', name:'gmail-mcp'},
+  {type:'url', url:'https://calendarmcp.googleapis.com/mcp/v1', name:'gcalendar-mcp'},
+  {type:'url', url:'https://drivemcp.googleapis.com/mcp/v1', name:'gdrive-mcp'}
+];
+
+let history = [];
+let isLoading = false;
+let isRecording = false;
+let recognition = null;
+
+// ── API KEY ──────────────────────────────────────────────
+function getApiKey(){return localStorage.getItem('rog_api_key')||'';}
+function openSettings(){
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings(e){
+  if(!e || e.target===document.getElementById('settingsModal'))
+    document.getElementById('settingsModal').classList.remove('open');
+}
+function saveSettings(){
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(k) localStorage.setItem('rog_api_key', k);
+  document.getElementById('settingsModal').classList.remove('open');
+  addMsg('ai','✅ Clé API enregistrée ! Tu peux maintenant utiliser l\'agent.');
+}
+
+// ── UI HELPERS ───────────────────────────────────────────
+function quickSend(t){document.getElementById('userInput').value=t;sendMessage();}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+
+function addMsg(role, content, badges){
+  const msgs = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg' + (role==='user'?' user':'');
+  const av = document.createElement('div');
+  av.className = 'avatar ' + (role==='user'?'user':'ai');
+  av.textContent = role==='user'?'R':'✦';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (role==='user'?'user':'ai');
+  if(badges && badges.length){
+    badges.forEach(b=>{
+      const bd = document.createElement('span');
+      bd.className = 'tool-badge';
+      bd.textContent = b;
+      bubble.appendChild(bd);
+    });
+    bubble.appendChild(document.createElement('br'));
+  }
+  const span = document.createElement('span');
+  span.innerHTML = content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  bubble.appendChild(span);
+  wrap.appendChild(av);
+  wrap.appendChild(bubble);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping(){
+  const msgs = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className='msg'; d.id='typing';
+  d.innerHTML='<div class="avatar ai">✦</div><div class="typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+// ── SEND MESSAGE ─────────────────────────────────────────
+async function sendMessage(){
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if(!text || isLoading) return;
+
+  const apiKey = getApiKey();
+  if(!apiKey){
+    addMsg('ai','⚠️ Configure d\'abord ta clé API Anthropic en cliquant sur ⚙️ en haut à droite.\n\nObtiens ta clé sur console.anthropic.com');
+    return;
+  }
+
+  isLoading = true;
+  input.value = '';
+  input.style.height = 'auto';
+  addMsg('user', text);
+  history.push({role:'user', content:text});
+  showTyping();
+
+  const needsWeb = /actualit|news|météo|prix|cherche|internet|aujourd.hui|maintenant|2025|2026/i.test(text);
+  const tools = needsWeb ? [{type:'web_search_20250305', name:'web_search'}] : undefined;
+
+  const body = {
+    model: MODEL,
+    max_tokens: 1000,
+    system: SYSTEM,
+    messages: history,
+    mcp_servers: MCP_SERVERS
+  };
+  if(tools) body.tools = tools;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await resp.json();
+
+    if(data.error){
+      removeTyping();
+      addMsg('ai','⚠️ Erreur API : ' + data.error.message);
+      isLoading = false;
+      return;
+    }
+
+    const texts = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+    const badges = [...new Set((data.content||[])
+      .filter(b=>b.type==='mcp_tool_use'||b.type==='tool_use')
+      .map(b=>{
+        if(!b.name) return null;
+        if(b.name.includes('gmail')) return '📬 Gmail';
+        if(b.name.includes('calendar')) return '📅 Calendar';
+        if(b.name.includes('drive')) return '📁 Drive';
+        if(b.name==='web_search') return '🌐 Web';
+        return '⚙️ Tool';
+      }).filter(Boolean))];
+
+    const reply = texts.join('\n') || 'Je n\'ai pas pu traiter cette demande.';
+    removeTyping();
+    addMsg('ai', reply, badges);
+    history.push({role:'assistant', content:reply});
+
+    // TTS
+    if('speechSynthesis' in window && reply.length < 300){
+      const utt = new SpeechSynthesisUtterance(reply.replace(/<[^>]+>/g,''));
+      utt.lang = 'fr-FR';
+      utt.rate = 1.05;
+      window.speechSynthesis.speak(utt);
+    }
+
+  } catch(err){
+    removeTyping();
+    addMsg('ai','⚠️ Erreur de connexion. Vérifie ta connexion internet.');
+  }
+  isLoading = false;
+}
+
+// ── VOICE INPUT ──────────────────────────────────────────
+function toggleMic(){
+  const btn = document.getElementById('micBtn');
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    addMsg('ai','⚠️ La reconnaissance vocale n\'est pas disponible sur ce navigateur. Utilise Chrome.');
+    return;
+  }
+  if(isRecording){
+    recognition&&recognition.stop();
+    isRecording=false;
+    btn.classList.remove('recording');
+    btn.textContent='🎙️';
+    return;
+  }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();
+  recognition.lang='fr-FR';
+  recognition.interimResults=false;
+  recognition.maxAlternatives=1;
+  recognition.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    document.getElementById('userInput').value=txt;
+    isRecording=false;
+    btn.classList.remove('recording');
+    btn.textContent='🎙️';
+    sendMessage();
+  };
+  recognition.onerror=()=>{
+    isRecording=false;
+    btn.classList.remove('recording');
+    btn.textContent='🎙️';
+  };
+  recognition.onend=()=>{
+    if(isRecording){isRecording=false;btn.classList.remove('recording');btn.textContent='🎙️';}
+  };
+  recognition.start();
+  isRecording=true;
+  btn.classList.add('recording');
+  btn.textContent='🔴';
+}
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  if(!getApiKey()){
+    setTimeout(()=>{
+      addMsg('ai','👋 Pour commencer, clique sur ⚙️ en haut et entre ta clé API Anthropic.\n\nObtiens-la gratuitement sur console.anthropic.com');
+    }, 800);
+  }
+});
+</script>
+</body>
+</html>
